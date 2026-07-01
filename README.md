@@ -14,19 +14,19 @@ docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat
 
 Useful variants:
 
-```sh
+```bash
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -d
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -m
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli --json
 ```
 
-If you use the terminal often, you can add this to your Terminal init commands to get native-like behavior:
+If you use the terminal often, you can add this to your Terminal init commands to get native-like CLI behavior:
 
-```sh
+```bash
 echo 'alias vnstat='\''docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli'\''' >> /root/.zshrc
 ```
 
-Since this is the standard vnstat, all CLI commands should be available. To see all the commands, [see vnStat's official website.](https://humdi.net/vnstat/)
+Since this is the standard vnStat, all CLI commands should be available. To see all the commands, [see vnStat's official website.](https://humdi.net/vnstat/)
 
 ## Technical Info
 

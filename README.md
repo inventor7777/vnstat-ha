@@ -8,6 +8,18 @@ The first version is intentionally simple:
 - A small ingress web UI shows live summaries pulled from `vnstat --json`.
 - The app can auto-detect the primary network interface or let you pin one explicitly.
 
+## Development image behavior
+
+For local development and custom repositories, this app is currently configured to build locally from [`vnstat/Dockerfile`](/Users/Gabriel/GitHub%20&%20Projects/vnstat-ha/vnstat/Dockerfile) instead of pulling from GHCR.
+
+That is why the `image:` key in [`vnstat/config.yaml`](/Users/Gabriel/GitHub%20&%20Projects/vnstat-ha/vnstat/config.yaml) is commented out right now.
+
+If you later want published releases:
+
+- publish multi-arch images to a registry such as GHCR
+- uncomment `image:`
+- tag releases so Home Assistant can pull versioned images instead of building locally
+
 ## Why ingress first?
 
 `vnstat` is best when it quietly collects data in the background. The cleanest way to view that inside Home Assistant is an ingress dashboard:

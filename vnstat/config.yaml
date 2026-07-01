@@ -21,4 +21,6 @@ options:
   interface: ""
 schema:
   interface: "str?"
-image: "ghcr.io/gabriel/vnstat-ha"
+# For local/custom repository development, leave image commented so Home Assistant
+# builds from the Dockerfile in this directory instead of pulling from a registry.
+# image: "ghcr.io/gabriel/vnstat-ha"

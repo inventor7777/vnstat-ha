@@ -77,10 +77,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 28px;
+        gap: 0;
         min-height: 88px;
-        padding-top: 18px;
-        padding-bottom: 18px;
+        padding: 0;
       }
 
       .stat-label {
@@ -98,14 +97,20 @@
       .live-row {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 10px;
         font-size: 22px;
         color: var(--text);
         white-space: nowrap;
+        flex: 1 1 50%;
+        min-height: 88px;
+        padding: 18px 24px;
       }
 
       .live-label {
         color: var(--muted);
+        min-width: 128px;
+        text-align: center;
       }
 
       .live-value {
@@ -232,15 +237,19 @@
 
         .live-card {
           flex-direction: column;
-          gap: 12px;
+          padding: 0;
         }
 
         .live-separator {
-          display: none;
+          display: block;
+          width: 100%;
+          height: 1px;
         }
 
         .live-row {
           font-size: 18px;
+          min-height: 72px;
+          width: 100%;
         }
       }
     </style>
@@ -255,9 +264,9 @@
       <section class="grid" id="summary"></section>
 
       <section class="section card live-card">
-        <div class="live-row"><span id="live-up-icon"></span><span class="live-label">live upload</span><span class="live-value" id="live-up">Loading...</span></div>
+        <div class="live-row"><span id="live-up-icon"></span><span class="live-label">Live Upload</span><span class="live-value" id="live-up">Loading...</span></div>
         <div class="live-separator" aria-hidden="true"></div>
-        <div class="live-row"><span id="live-down-icon"></span><span class="live-label">live download</span><span class="live-value" id="live-down">Loading...</span></div>
+        <div class="live-row"><span id="live-down-icon"></span><span class="live-label">Live Download</span><span class="live-value" id="live-down">Loading...</span></div>
       </section>
 
       <section class="section card">

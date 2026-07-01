@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 
 DB_DIR = os.environ.get("VNSTAT_DB_DIR", "/data/vnstat")
+CONFIG_FILE = os.environ.get("VNSTAT_CONFIG", "/data/vnstat.conf")
 INTERFACE = os.environ.get("VNSTAT_INTERFACE", "")
 PORT = int(os.environ.get("APP_PORT", "8099"))
 ALLOWED_IPS = {"127.0.0.1", "::1", "172.30.32.2"}
@@ -20,7 +21,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 def run_vnstat() -> dict:
-    command = ["vnstat", "--json", "--dbdir", DB_DIR]
+    command = ["vnstat", "--json", "--config", CONFIG_FILE]
     if INTERFACE:
         command.extend(["-i", INTERFACE])
     result = subprocess.run(command, check=True, capture_output=True, text=True)

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 readonly DB_DIR="/data/vnstat"
+readonly CONFIG_FILE="/data/vnstat.conf"
 readonly APP_DIR="/app"
 readonly WEB_PORT="8099"
 
@@ -44,17 +45,27 @@ fi
 
 export VNSTAT_DB_DIR="${DB_DIR}"
 export VNSTAT_INTERFACE="${INTERFACE}"
+export VNSTAT_CONFIG="${CONFIG_FILE}"
 export APP_PORT="${WEB_PORT}"
 
 bashio::log.info "Using interface: ${VNSTAT_INTERFACE}"
 bashio::log.info "Using database directory: ${VNSTAT_DB_DIR}"
 
-vnstat --dbdir "${VNSTAT_DB_DIR}" --add -i "${VNSTAT_INTERFACE}" >/dev/null 2>&1 || true
+cat > "${CONFIG_FILE}" <<EOF
+DatabaseDir "${VNSTAT_DB_DIR}"
+UpdateInterval 30
+PollInterval 5
+SaveInterval 5
+CreateDirs 1
+UseLogging 0
+EOF
+
+vnstat --config "${VNSTAT_CONFIG}" --add -i "${VNSTAT_INTERFACE}" >/dev/null 2>&1 || true
 
 python3 "${APP_DIR}/server.py" &
 WEB_PID=$!
 
-vnstatd -n --dbdir "${VNSTAT_DB_DIR}" &
+vnstatd -n --config "${VNSTAT_CONFIG}" &
 VNSTATD_PID=$!
 
 cleanup() {

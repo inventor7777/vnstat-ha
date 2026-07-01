@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -eu
+
+exec vnstat --config /data/vnstat.conf "$@"

@@ -49,6 +49,25 @@ A CLI shortcut can still be added later, but it should be a convenience feature,
 - Data is persisted under `/data/vnstat`.
 - The UI is available through ingress in the Home Assistant sidebar.
 
+## CLI access inside the container
+
+If you open a shell in the running app container, plain `vnstat` may still try its default database path and show an error.
+
+Use the wrapper command instead:
+
+```sh
+vnstat-cli
+vnstat-cli -d
+vnstat-cli -m
+vnstat-cli -s
+```
+
+If you want the raw command, this is the equivalent form:
+
+```sh
+vnstat --config /data/vnstat.conf
+```
+
 ## Next likely improvements
 
 - Expose a lightweight JSON endpoint suitable for a future HA integration

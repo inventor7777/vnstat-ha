@@ -8,8 +8,9 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 COPY run.sh /run.sh
+COPY vnstat-cli /usr/local/bin/vnstat-cli
 COPY app /app
 
-RUN chmod a+x /run.sh
+RUN chmod a+x /run.sh /usr/local/bin/vnstat-cli
 
 CMD ["/run.sh"]

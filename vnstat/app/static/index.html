@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>vnStat</title>
+    <style>
+      :root {
+        --bg: #f6f3ee;
+        --panel: rgba(255, 255, 255, 0.84);
+        --panel-strong: #ffffff;
+        --text: #1f1c18;
+        --muted: #70675e;
+        --accent: #b85c38;
+        --accent-soft: #f3d2c2;
+        --line: rgba(31, 28, 24, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font: 16px/1.5 "Avenir Next", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(184, 92, 56, 0.18), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(243, 210, 194, 0.9), transparent 30%),
+          linear-gradient(160deg, #f4efe7, #efe7dc 55%, #f8f5ef);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--panel);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 18px;
+        box-shadow: 0 14px 40px rgba(31, 28, 24, 0.08);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .stat-label {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .stat-value {
+        margin-top: 6px;
+        font-size: clamp(1.7rem, 4vw, 2.4rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .section {
+        margin-top: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        font-size: 14px;
+      }
+
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .error {
+        color: #8a2d14;
+        background: rgba(184, 92, 56, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="eyebrow">Home Assistant App</span>
+        <h1>vnStat</h1>
+        <p>Persistent network traffic history, finally living somewhere better than a disposable shell.</p>
+        <div class="meta" id="meta"></div>
+      </header>
+
+      <section class="grid" id="summary"></section>
+
+      <section class="section card">
+        <h2>Daily usage</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Received</th>
+              <th>Transmitted</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="days"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const formatBytes = (value) => {
+        if (value === undefined || value === null) return "n/a";
+        const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"];
+        let size = Number(value);
+        let unitIndex = 0;
+
+        while (size >= 1024 && unitIndex < units.length - 1) {
+          size /= 1024;
+          unitIndex += 1;
+        }
+
+        const digits = size >= 100 || unitIndex === 0 ? 0 : size >= 10 ? 1 : 2;
+        return `${size.toFixed(digits)} ${units[unitIndex]}`;
+      };
+
+      const cards = [
+        { label: "Today", source: (traffic) => traffic.day?.[traffic.day.length - 1] },
+        { label: "Current Month", source: (traffic) => traffic.month?.[traffic.month.length - 1] },
+        { label: "All Time", source: (traffic) => traffic.total },
+      ];
+
+      const renderSummary = (traffic) => {
+        const summary = document.getElementById("summary");
+        summary.innerHTML = "";
+
+        cards.forEach(({ label, source }) => {
+          const item = source(traffic) || {};
+          const total = (item.rx || 0) + (item.tx || 0);
+          const card = document.createElement("article");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="stat-label">${label}</div>
+            <div class="stat-value">${formatBytes(item.rx)} down</div>
+            <div class="stat-label">${formatBytes(item.tx)} up</div>
+            <div class="stat-label">${formatBytes(total)} total</div>
+          `;
+          summary.appendChild(card);
+        });
+      };
+
+      const renderDays = (days) => {
+        const tbody = document.getElementById("days");
+        tbody.innerHTML = "";
+
+        days.slice(0, 14).forEach((entry) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${entry.date.year}-${String(entry.date.month).padStart(2, "0")}-${String(entry.date.day).padStart(2, "0")}</td>
+            <td>${formatBytes(entry.rx)}</td>
+            <td>${formatBytes(entry.tx)}</td>
+            <td>${formatBytes((entry.rx || 0) + (entry.tx || 0))}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      };
+
+      const renderMeta = (payload) => {
+        const iface = payload.data.interfaces?.[0];
+        const updated = iface?.updated;
+        const updatedText = updated
+          ? `${updated.date.year}-${String(updated.date.month).padStart(2, "0")}-${String(updated.date.day).padStart(2, "0")} ${String(updated.time.hour).padStart(2, "0")}:${String(updated.time.minute).padStart(2, "0")}`
+          : "n/a";
+        const meta = document.getElementById("meta");
+        meta.innerHTML = `
+          <span>Interface: ${payload.interface || "auto"}</span>
+          <span>Updated: ${updatedText}</span>
+          <span>Database: /data/vnstat</span>
+          <span>Source: vnstat --json</span>
+        `;
+      };
+
+      const renderError = (message) => {
+        document.getElementById("summary").innerHTML = `<article class="card error">${message}</article>`;
+      };
+
+      const load = async () => {
+        try {
+          const response = await fetch("./api/stats", { cache: "no-store" });
+          const payload = await response.json();
+          if (!response.ok || payload.status !== "ok") {
+            throw new Error(payload.message || "Unable to load vnStat data");
+          }
+
+          const iface = payload.data.interfaces?.[0]?.traffic || {};
+          renderMeta(payload);
+          renderSummary(iface);
+          renderDays((iface.day || []).slice().reverse());
+        } catch (error) {
+          renderError(error.message);
+        }
+      };
+
+      load();
+      setInterval(load, 30000);
+    </script>
+  </body>
+</html>

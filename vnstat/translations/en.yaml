@@ -1,0 +1,4 @@
+configuration:
+  interface:
+    name: Interface
+    description: Leave blank to auto-detect the primary network interface used by Home Assistant.

@@ -1,0 +1,24 @@
+# https://developers.home-assistant.io/docs/apps/configuration#app-configuration
+name: vnStat
+version: "0.1.0"
+slug: vnstat
+description: Persistent vnStat traffic monitoring with an ingress dashboard
+url: "https://github.com/Gabriel/vnstat-ha/tree/main/vnstat"
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: services
+boot: auto
+host_network: true
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: mdi:chart-line
+panel_title: vnStat
+watchdog: "http://[HOST]:[PORT:8099]/api/health"
+options:
+  interface: ""
+schema:
+  interface: "str?"
+image: "ghcr.io/gabriel/vnstat-ha"

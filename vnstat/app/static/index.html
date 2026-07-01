@@ -79,6 +79,26 @@
         font-size: 15px;
       }
 
+      .stat-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stat-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        color: #93c5fd;
+      }
+
+      .stat-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+      }
+
       .stat-value {
         margin-top: 6px;
         font-size: clamp(2rem, 4.5vw, 2.9rem);
@@ -217,7 +237,6 @@
         <div class="toolbar">
           <button id="show-normal" class="active" type="button">vnStat Normal</button>
           <button id="show-json" type="button">vnStat JSON</button>
-          <button id="copy-output" type="button">Copy output</button>
         </div>
         <pre id="cli-output">Loading...</pre>
       </section>
@@ -247,6 +266,22 @@
         { label: "All Time", source: (traffic) => traffic.total },
       ];
 
+      const uploadIcon = `
+        <span class="stat-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M15,20A1,1 0 0,0 14,19H13V17H17A2,2 0 0,0 19,15V5A2,2 0 0,0 17,3H7A2,2 0 0,0 5,5V15A2,2 0 0,0 7,17H11V19H10A1,1 0 0,0 9,20H2V22H9A1,1 0 0,0 10,23H14A1,1 0 0,0 15,22H22V20H15M7,15V5H17V15H7M12,6L8,10H11V14H13V10H16L12,6Z" />
+          </svg>
+        </span>
+      `;
+
+      const downloadIcon = `
+        <span class="stat-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M15,20A1,1 0 0,0 14,19H13V17H17A2,2 0 0,0 19,15V5A2,2 0 0,0 17,3H7A2,2 0 0,0 5,5V15A2,2 0 0,0 7,17H11V19H10A1,1 0 0,0 9,20H2V22H9A1,1 0 0,0 10,23H14A1,1 0 0,0 15,22H22V20H15M7,15V5H17V15H7M12,14L16,10H13V6H11V10H8L12,14Z" />
+          </svg>
+        </span>
+      `;
+
       const renderSummary = (traffic) => {
         const summary = document.getElementById("summary");
         summary.innerHTML = "";
@@ -259,8 +294,8 @@
           card.innerHTML = `
             <div class="stat-label">${label}</div>
             <div class="stat-value">${formatBytes(total)} total</div>
-            <div class="stat-label">${formatBytes(item.tx)} up</div>
-            <div class="stat-label">${formatBytes(item.rx)} down</div>
+            <div class="stat-label stat-row">${uploadIcon}<span>${formatBytes(item.tx)} up</span></div>
+            <div class="stat-label stat-row">${downloadIcon}<span>${formatBytes(item.rx)} down</span></div>
           `;
           summary.appendChild(card);
         });
@@ -337,26 +372,8 @@
         }
       };
 
-      const copyCliOutput = async () => {
-        const output = document.getElementById("cli-output").textContent;
-        const button = document.getElementById("copy-output");
-        const original = button.textContent;
-
-        try {
-          await navigator.clipboard.writeText(output);
-          button.textContent = "Copied";
-        } catch (error) {
-          button.textContent = "Copy failed";
-        }
-
-        setTimeout(() => {
-          button.textContent = original;
-        }, 1200);
-      };
-
       document.getElementById("show-normal").addEventListener("click", () => loadCliOutput("normal"));
       document.getElementById("show-json").addEventListener("click", () => loadCliOutput("json"));
-      document.getElementById("copy-output").addEventListener("click", copyCliOutput);
 
       load();
       loadCliOutput("normal");

@@ -38,6 +38,14 @@ def run_vnstat_text(json_mode: bool) -> str:
     return result.stdout
 
 
+def run_vnstat_live() -> dict:
+    command = ["vnstat", "--config", CONFIG_FILE, "-tr", "2", "--json"]
+    if INTERFACE:
+        command.extend(["-i", INTERFACE])
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    return json.loads(result.stdout)
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "vnstat-ha/0.1"
 
@@ -110,6 +118,22 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             self._send_json({"status": "ok", "output": output})
+            return
+
+        if parsed.path == "/api/live":
+            try:
+                payload = run_vnstat_live()
+            except subprocess.CalledProcessError as err:
+                self._send_json(
+                    {
+                        "status": "error",
+                        "message": err.stderr.strip() or "vnstat live command failed",
+                    },
+                    status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+                return
+
+            self._send_json({"status": "ok", "data": payload})
             return
 
         if parsed.path in {"/", "/index.html"}:

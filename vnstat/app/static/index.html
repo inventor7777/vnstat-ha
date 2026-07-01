@@ -73,6 +73,16 @@
           0 18px 40px rgba(15, 23, 42, 0.28);
       }
 
+      .live-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        min-height: 88px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
       .stat-label {
         margin-top: 14px;
         color: var(--muted);
@@ -85,12 +95,35 @@
         gap: 8px;
       }
 
+      .live-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 22px;
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .live-label {
+        color: var(--muted);
+      }
+
+      .live-value {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .live-separator {
+        width: 1px;
+        align-self: stretch;
+        background: var(--line);
+      }
+
       .stat-icon {
         width: 20px;
         height: 20px;
         flex: 0 0 20px;
         transform: translateY(-2px);
-        color: #93c5fd;
       }
 
       .stat-icon svg {
@@ -98,6 +131,14 @@
         width: 100%;
         height: 100%;
         fill: currentColor;
+      }
+
+      .stat-icon.up {
+        color: #f87171;
+      }
+
+      .stat-icon.down {
+        color: #60a5fa;
       }
 
       .stat-value {
@@ -188,6 +229,19 @@
         .meta {
           font-size: 15px;
         }
+
+        .live-card {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .live-separator {
+          display: none;
+        }
+
+        .live-row {
+          font-size: 18px;
+        }
       }
     </style>
   </head>
@@ -199,6 +253,12 @@
       </header>
 
       <section class="grid" id="summary"></section>
+
+      <section class="section card live-card">
+        <div class="live-row"><span id="live-up-icon"></span><span class="live-label">live upload</span><span class="live-value" id="live-up">Loading...</span></div>
+        <div class="live-separator" aria-hidden="true"></div>
+        <div class="live-row"><span id="live-down-icon"></span><span class="live-label">live download</span><span class="live-value" id="live-down">Loading...</span></div>
+      </section>
 
       <section class="section card">
         <h2>CLI output</h2>
@@ -235,7 +295,7 @@
       ];
 
       const uploadIcon = `
-        <span class="stat-icon" aria-hidden="true">
+        <span class="stat-icon up" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M15,20A1,1 0 0,0 14,19H13V17H17A2,2 0 0,0 19,15V5A2,2 0 0,0 17,3H7A2,2 0 0,0 5,5V15A2,2 0 0,0 7,17H11V19H10A1,1 0 0,0 9,20H2V22H9A1,1 0 0,0 10,23H14A1,1 0 0,0 15,22H22V20H15M7,15V5H17V15H7M12,6L8,10H11V14H13V10H16L12,6Z" />
           </svg>
@@ -243,12 +303,21 @@
       `;
 
       const downloadIcon = `
-        <span class="stat-icon" aria-hidden="true">
+        <span class="stat-icon down" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M15,20A1,1 0 0,0 14,19H13V17H17A2,2 0 0,0 19,15V5A2,2 0 0,0 17,3H7A2,2 0 0,0 5,5V15A2,2 0 0,0 7,17H11V19H10A1,1 0 0,0 9,20H2V22H9A1,1 0 0,0 10,23H14A1,1 0 0,0 15,22H22V20H15M7,15V5H17V15H7M12,14L16,10H13V6H11V10H8L12,14Z" />
           </svg>
         </span>
       `;
+
+      const formatRate = (value, rateString) => {
+        if (rateString) return rateString;
+        if (value === undefined || value === null) return "n/a";
+        return `${formatBytes(value)}/s`;
+      };
+
+      document.getElementById("live-up-icon").outerHTML = uploadIcon;
+      document.getElementById("live-down-icon").outerHTML = downloadIcon;
 
       const renderSummary = (traffic) => {
         const summary = document.getElementById("summary");
@@ -283,6 +352,29 @@
 
       const renderError = (message) => {
         document.getElementById("summary").innerHTML = `<article class="card error">${message}</article>`;
+      };
+
+      const renderLive = (payload) => {
+        const up = payload?.tx || {};
+        const down = payload?.rx || {};
+        document.getElementById("live-up").textContent = formatRate(up.bytespersecond, up.ratestring);
+        document.getElementById("live-down").textContent = formatRate(down.bytespersecond, down.ratestring);
+      };
+
+      const loadLive = async () => {
+        try {
+          const response = await fetch("./api/live", { cache: "no-store" });
+          const payload = await response.json();
+          if (!response.ok || payload.status !== "ok") {
+            throw new Error(payload.message || "Unable to load live vnStat data");
+          }
+          renderLive(payload.data);
+        } catch (error) {
+          document.getElementById("live-up").textContent = error.message;
+          document.getElementById("live-down").textContent = error.message;
+        } finally {
+          setTimeout(loadLive, 2000);
+        }
       };
 
       const setActiveCliButton = (mode) => {
@@ -337,6 +429,7 @@
 
       load();
       loadCliOutput("normal");
+      loadLive();
       setInterval(load, 30000);
     </script>
   </body>

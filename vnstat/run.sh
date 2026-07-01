@@ -56,6 +56,7 @@ DatabaseDir "${VNSTAT_DB_DIR}"
 UpdateInterval 30
 PollInterval 5
 SaveInterval 5
+MonthlyMonths 48
 CreateDirs 1
 UseLogging 0
 EOF

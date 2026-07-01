@@ -68,6 +68,28 @@ If you want the raw command, this is the equivalent form:
 vnstat --config /data/vnstat.conf
 ```
 
+## Raw CLI from the HA host
+
+From the Home Assistant host or Terminal app, the simplest pattern is:
+
+```sh
+docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli
+```
+
+Useful variants:
+
+```sh
+docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -d
+docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -m
+docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli --json
+```
+
+If you use the terminal often, you can also add an alias:
+
+```sh
+echo 'alias vnstat='\''docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli'\''' >> /root/.zshrc
+```
+
 ## Next likely improvements
 
 - Expose a lightweight JSON endpoint suitable for a future HA integration

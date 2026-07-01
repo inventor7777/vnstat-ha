@@ -28,6 +28,16 @@ def run_vnstat() -> dict:
     return json.loads(result.stdout)
 
 
+def run_vnstat_text(json_mode: bool) -> str:
+    command = ["vnstat", "--config", CONFIG_FILE]
+    if json_mode:
+        command.append("--json")
+    if INTERFACE:
+        command.extend(["-i", INTERFACE])
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    return result.stdout
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "vnstat-ha/0.1"
 
@@ -68,6 +78,38 @@ class Handler(BaseHTTPRequestHandler):
                     "data": payload,
                 }
             )
+            return
+
+        if parsed.path == "/api/cli/json":
+            try:
+                output = run_vnstat_text(json_mode=True)
+            except subprocess.CalledProcessError as err:
+                self._send_json(
+                    {
+                        "status": "error",
+                        "message": err.stderr.strip() or "vnstat command failed",
+                    },
+                    status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+                return
+
+            self._send_json({"status": "ok", "output": output})
+            return
+
+        if parsed.path == "/api/cli/normal":
+            try:
+                output = run_vnstat_text(json_mode=False)
+            except subprocess.CalledProcessError as err:
+                self._send_json(
+                    {
+                        "status": "error",
+                        "message": err.stderr.strip() or "vnstat command failed",
+                    },
+                    status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+                return
+
+            self._send_json({"status": "ok", "output": output})
             return
 
         if parsed.path in {"/", "/index.html"}:

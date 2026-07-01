@@ -116,9 +116,55 @@
         line-height: 1.7;
       }
 
+      footer {
+        margin-top: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
       .error {
         color: #dbeafe;
         background: rgba(30, 41, 59, 0.72);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      button {
+        border: 1px solid rgba(96, 165, 250, 0.28);
+        background: rgba(15, 23, 42, 0.78);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font: inherit;
+        cursor: pointer;
+        box-shadow: 0 0 18px rgba(96, 165, 250, 0.12);
+      }
+
+      button:hover {
+        background: rgba(30, 41, 59, 0.92);
+      }
+
+      button.active {
+        border-color: rgba(96, 165, 250, 0.5);
+        box-shadow: 0 0 22px rgba(96, 165, 250, 0.2);
+      }
+
+      pre {
+        margin: 0;
+        padding: 18px;
+        overflow-x: auto;
+        border-radius: 18px;
+        background: rgba(2, 6, 23, 0.82);
+        border: 1px solid var(--line);
+        color: #dbeafe;
+        font: 14px/1.5 "SFMono-Regular", "Menlo", "Consolas", monospace;
+        white-space: pre-wrap;
       }
 
       h2 {
@@ -165,6 +211,18 @@
           <tbody id="days"></tbody>
         </table>
       </section>
+
+      <section class="section card">
+        <h2>CLI output</h2>
+        <div class="toolbar">
+          <button id="show-normal" class="active" type="button">vnStat Normal</button>
+          <button id="show-json" type="button">vnStat JSON</button>
+          <button id="copy-output" type="button">Copy output</button>
+        </div>
+        <pre id="cli-output">Loading...</pre>
+      </section>
+
+      <footer id="footer"></footer>
     </main>
 
     <script>
@@ -231,11 +289,35 @@
           ? `${updated.date.year}-${String(updated.date.month).padStart(2, "0")}-${String(updated.date.day).padStart(2, "0")} ${String(updated.time.hour).padStart(2, "0")}:${String(updated.time.minute).padStart(2, "0")}`
           : "n/a";
         const meta = document.getElementById("meta");
-        meta.textContent = `Interface: ${payload.interface || "auto"} Updated: ${updatedText} Database: /data/vnstat Source: vnstat --json`;
+        const footer = document.getElementById("footer");
+        meta.textContent = `Interface: ${payload.interface || "auto"} Database: /data/vnstat`;
+        footer.textContent = `Updated: ${updatedText}`;
       };
 
       const renderError = (message) => {
         document.getElementById("summary").innerHTML = `<article class="card error">${message}</article>`;
+      };
+
+      const setActiveCliButton = (mode) => {
+        document.getElementById("show-normal").classList.toggle("active", mode === "normal");
+        document.getElementById("show-json").classList.toggle("active", mode === "json");
+      };
+
+      const loadCliOutput = async (mode = "normal") => {
+        const output = document.getElementById("cli-output");
+        setActiveCliButton(mode);
+        output.textContent = "Loading...";
+
+        try {
+          const response = await fetch(`./api/cli/${mode}`, { cache: "no-store" });
+          const payload = await response.json();
+          if (!response.ok || payload.status !== "ok") {
+            throw new Error(payload.message || "Unable to load vnStat output");
+          }
+          output.textContent = payload.output.trim() || "(no output)";
+        } catch (error) {
+          output.textContent = error.message;
+        }
       };
 
       const load = async () => {
@@ -255,7 +337,29 @@
         }
       };
 
+      const copyCliOutput = async () => {
+        const output = document.getElementById("cli-output").textContent;
+        const button = document.getElementById("copy-output");
+        const original = button.textContent;
+
+        try {
+          await navigator.clipboard.writeText(output);
+          button.textContent = "Copied";
+        } catch (error) {
+          button.textContent = "Copy failed";
+        }
+
+        setTimeout(() => {
+          button.textContent = original;
+        }, 1200);
+      };
+
+      document.getElementById("show-normal").addEventListener("click", () => loadCliOutput("normal"));
+      document.getElementById("show-json").addEventListener("click", () => loadCliOutput("json"));
+      document.getElementById("copy-output").addEventListener("click", copyCliOutput);
+
       load();
+      loadCliOutput("normal");
       setInterval(load, 30000);
     </script>
   </body>

@@ -200,9 +200,9 @@
           card.className = "card";
           card.innerHTML = `
             <div class="stat-label">${label}</div>
-            <div class="stat-value">${formatBytes(item.rx)} down</div>
+            <div class="stat-value">${formatBytes(total)} total</div>
             <div class="stat-label">${formatBytes(item.tx)} up</div>
-            <div class="stat-label">${formatBytes(total)} total</div>
+            <div class="stat-label">${formatBytes(item.rx)} down</div>
           `;
           summary.appendChild(card);
         });

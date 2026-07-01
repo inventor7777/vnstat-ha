@@ -1,47 +1,34 @@
-# vnStat
+# vnStat for Home Assistant
 
-Persistent `vnstat` traffic monitoring for Home Assistant, with an ingress dashboard and access to the real CLI output.
+- `vnstatd` stores its database in the app's `/data` directory so history survives app restarts and Home Assistant host reboots.
+- A light ingress web UI shows data pulled from `vnstat --json`, and also exposes CLI output and the true CLI inside the container.
+- The app can auto-detect the primary network interface or let you pin one explicitly.
 
-## What This App Does
+## Accessing the true CLI
 
-- Runs `vnstatd` inside its own app container
-- Stores the database in `/data/vnstat` so history survives restarts
-- Exposes a simple ingress dashboard in Home Assistant
-- Lets you inspect normal and JSON `vnstat` output from the web UI
-
-## Raw CLI Access
-
-If you want the real raw CLI from the Home Assistant host, the easiest pattern is:
-
-```sh
-docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" <command>
-```
-
-Common examples:
+From the Home Assistant host or Terminal app, the simplest pattern is:
 
 ```sh
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli
-docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -s
+```
+
+Useful variants:
+
+```sh
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -d
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -m
 docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli --json
-docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli -tr 2
 ```
 
-Inside the container, you can also use:
-
-```sh
-vnstat-cli
-```
-
-That wrapper maps to:
-
-```sh
-vnstat --config /data/vnstat.conf
-```
-
-If you use the Home Assistant terminal often, you can also add a shell alias in your init commands:
+If you use the terminal often, you can add this to your Terminal init commands to get native-like behavior:
 
 ```sh
 echo 'alias vnstat='\''docker exec -it "$(docker ps --filter name=vnstat --format "{{.Names}}")" vnstat-cli'\''' >> /root/.zshrc
 ```
+
+## Technical Info
+
+- If `interface` is blank, the app tries the default-route interface first and then the first non-loopback interface.
+- Data is persisted under `/data/vnstat`.
+- The UI is available through standard Ingress
+- The vnStat image is very lightweight. To keep it simple, rather than pulling from GHCR, this image will automatically build when you install it.
